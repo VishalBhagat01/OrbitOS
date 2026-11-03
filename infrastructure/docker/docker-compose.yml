@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: orbit-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-orbit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-orbit}
+      POSTGRES_DB: ${POSTGRES_DB:-orbit}
+    ports: ["5432:5432"]
+    volumes: [orbit-postgres-data:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"], interval: 10s, timeout: 5s, retries: 5}
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    container_name: orbit-redis
+    ports: ["6379:6379"]
+    volumes: [orbit-redis-data:/data]
+    healthcheck: {test: ["CMD", "redis-cli", "ping"], interval: 10s, timeout: 5s, retries: 5}
+    restart: unless-stopped
+  nats:
+    image: nats:2.11-alpine
+    container_name: orbit-nats
+    command: ["-js", "-sd", "/data"]
+    ports: ["4222:4222", "8222:8222"]
+    volumes: [orbit-nats-data:/data]
+    restart: unless-stopped
+  temporal:
+    image: temporalio/auto-setup:latest
+    container_name: orbit-temporal
+    environment:
+      DB: postgresql
+      DB_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-orbit}
+      POSTGRES_PWD: ${POSTGRES_PASSWORD:-orbit}
+      POSTGRES_SEEDS: postgres
+    depends_on:
+      postgres: {condition: service_healthy}
+    ports: ["7233:7233"]
+    restart: unless-stopped
+  temporal-ui:
+    image: temporalio/ui:latest
+    container_name: orbit-temporal-ui
+    environment: {TEMPORAL_ADDRESS: temporal:7233}
+    depends_on: [temporal]
+    ports: ["8080:8080"]
+    restart: unless-stopped
+  minio:
+    image: minio/minio:latest
+    container_name: orbit-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-orbit}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-orbit-local-password}
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [orbit-minio-data:/data]
+    restart: unless-stopped
+
+volumes:
+  orbit-postgres-data:
+  orbit-redis-data:
+  orbit-nats-data:
+  orbit-minio-data:

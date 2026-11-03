@@ -1,0 +1,16 @@
+{
+  "name": "@orbit/workflow",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {"build": "tsc", "typecheck": "tsc --noEmit", "lint": "eslint src", "test": "vitest run --passWithNoTests"},
+  "dependencies": {
+    "@temporalio/client": "^1.15.0",
+    "@temporalio/workflow": "^1.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "vitest": "^4.0.6"
+  }
+}
