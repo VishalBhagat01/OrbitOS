@@ -33,7 +33,7 @@ corepack prepare pnpm@12.16.1 --activate
 Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone <https://github.com/VishalBhagat01/OrbitOS>
 cd orbit-os
 ```
 
